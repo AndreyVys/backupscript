@@ -241,12 +241,12 @@ do
 	    cat $OUT | sed 's/\r$//; 1,/name = startup-config:/d; /(config)>/,$d' > $TFTPROOT/$ip.cfg
 	;;
 
-	"DGS-1100-08P"|"192.168.53.13" )
+	"DGS-1100-08P"|"192.168.1.13" )
 	    RFOLDER="Backups/Dlink/"
 	    COOKIE=(`curl -i -# -X POST -d pass=$PASSWD_MD5 http://$ip/cgi/login.cgi | sed 's|.*SessID=||; s|.*Gambit=||'|sed -r 's/;path.+//'|sed -n "2,3p"`)
 	    curl -X POST -d "pswType=1"  "http://$ip/cgi/backup.cgi" -H "Cookie: Gambit=${COOKIE[1]}; SessID=${COOKIE[0]}" -o $TFTPROOT/$ip.cfg
 	;;
-	"192.168.53.6" )
+	"192.168.1.6" )
 	    RFOLDER="Backups/Dlink/"
 	    COOKIE=`curl -i -# --cookie-jar - -o /dev/null -X POST -d \
 		"pwd=$PASSWD&login=Login&err_flag=&err_msg=" \
