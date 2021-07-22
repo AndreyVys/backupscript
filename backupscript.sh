@@ -246,6 +246,7 @@ do
 	    COOKIE=(`curl -i -# -X POST -d pass=$PASSWD_MD5 http://$ip/cgi/login.cgi | sed 's|.*SessID=||; s|.*Gambit=||'|sed -r 's/;path.+//'|sed -n "2,3p"`)
 	    curl -X POST -d "pswType=1"  "http://$ip/cgi/backup.cgi" -H "Cookie: Gambit=${COOKIE[1]}; SessID=${COOKIE[0]}" -o $TFTPROOT/$ip.cfg
 	;;
+	# HP ProCurve 1810G - 24 GE
 	"192.168.1.6" )
 	    RFOLDER="Backups/Dlink/"
 	    COOKIE=`curl -i -# --cookie-jar - -o /dev/null -X POST -d \
