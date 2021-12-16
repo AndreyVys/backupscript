@@ -263,7 +263,6 @@ do
 	    LFILE_SSH=system.$EXTFILE
 	    RFOLDER_SSH=/srv/tftp
 	    RFOLDER="Automation/Backups/DFL/"
-	    EXTFILE="bak"
 	    SSHRequest $ip $LFILE_SSH $RFOLDER_SSH $EXTFILE
 	;;
 
