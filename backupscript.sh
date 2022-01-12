@@ -2,7 +2,7 @@
 
 USER_FTP=admin
 PASSWD_FTP=admin
-HOST_FTP=192.168.1.1
+HOST_FTP=ftp.local
 PORT_FTP=21
 RFOLDER="Automation/Backups/Dlink/"
 LOG="/tmp/`basename $BASH_SOURCE | cut -f 1 -d '.'`.log"
@@ -28,7 +28,7 @@ EXC_IP="
 "
 REQ_IP=()
 FIRST_IP=192.168.1.1
-NUM_IP=100
+NUM_IP=150
 
 rm -f $LOG
 rm -f /temp/temp.txt
@@ -196,14 +196,15 @@ do
 		.1.3.6.1.4.1.171.10.76.12.3.6.0 s  "$ip.$EXTFILE" \
 		.1.3.6.1.4.1.171.10.76.12.3.7.0 i 2  >> $LOG
 	    RFOLDER="Automation/Backups/Dlink/"
-
-#	    $SNMPSET $ip \
-#		.1.3.6.1.4.1.171.10.76.28.1.3.10.1.0 s $TFTP_SERV \
-#		.1.3.6.1.4.1.171.10.76.28.1.3.10.2.0 i 1 \
-#		.1.3.6.1.4.1.171.10.76.28.1.3.10.4.0 s "$ip.cfg" \
-#		.1.3.6.1.4.1.171.10.76.28.1.3.10.7.0 i 1 \
-#		.1.3.6.1.4.1.171.10.76.28.1.3.10.5.0 i 2  >>$LOG
-#	    RFOLDER="Automation/Backups/Dlink/"
+	    
+          # DGS-1210-10P rev. R1
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.1.0 x $TFTP_SERV_HEX \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.2.0 i 1 \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.4.0 s "$ip.cfg" \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.5.0 i 2 \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.7.0 i 1  >>$LOG
+	    RFOLDER="Automation/Backups/Dlink/"
 	;;
 
 
@@ -254,6 +255,7 @@ do
 	    sshpass -p $PASSWD ssh $USER@$ip $SSHCOMMAND
 	    RFOLDER_SSH=/srv/tftp
 	    RFOLDER="Automation/Backups/UBNT/"
+	    EXTFILE="tar.gz"
 	    SSHRequest $ip $LFILE_SSH $RFOLDER_SSH $EXTFILE
 	;;
 
