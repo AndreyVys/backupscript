@@ -162,7 +162,7 @@ do
 	    RFOLDER="Automation/Backups/Dlink/"
 	;;
 
-	"WS6-DGS-1210-26/F1"|"WS6-DGS-1210-10P/F1"|"WS6-DGS-1210-28P/F1"|"WS6-DGS-1210-20/F1"|"WS6-DGS-1210-52/F1"|"WS6-DGS-1210-28/F1" )
+	"WS6-DGS-1210-26/F1"|"WS6-DGS-1210-10P/F1"|"WS6-DGS-1210-10/F1"|"WS6-DGS-1210-28P/F1"|"WS6-DGS-1210-20/F1"|"WS6-DGS-1210-52/F1"|"WS6-DGS-1210-28/F1" )
 	    # 1- TFTP SERVER
 	    # 2- IPv4 (1)
 	    # 3 - InterfaceName
@@ -196,7 +196,7 @@ do
 		.1.3.6.1.4.1.171.10.76.12.3.6.0 s  "$ip.$EXTFILE" \
 		.1.3.6.1.4.1.171.10.76.12.3.7.0 i 2  >> $LOG
 	    RFOLDER="Automation/Backups/Dlink/"
-	    
+
           # DGS-1210-10P rev. R1
 	    $SNMPSET $ip \
 		.1.3.6.1.4.1.171.11.166.1000.3.2.1.0 x $TFTP_SERV_HEX \
@@ -236,13 +236,35 @@ do
 
 ;;
 
+	"DGS-3120-24SC" )
+	    EXTFILE="cfg"
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.171.12.1.2.18.1.1.3.3 a $TFTP_SERV \
+		.1.3.6.1.4.1.171.12.1.2.18.1.1.5.3 s "$ip.$EXTFILE" \
+		.1.3.6.1.4.1.171.12.1.2.18.1.1.7.3 s "config.cfg" \
+		.1.3.6.1.4.1.171.12.1.2.18.1.1.8.3 i 2 \
+		.1.3.6.1.4.1.171.12.1.2.18.1.1.12.3 i 3  >>$LOG
+	    RFOLDER="Automation/Backups/Dlink/"
+
+;;
+
+	"DGS-1210-28P/ME/B1" )
+	    EXTFILE="cfg"
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.171.10.76.30.2.3.5.0 a $TFTP_SERV \
+		.1.3.6.1.4.1.171.10.76.30.2.3.6.0 s "$ip.$EXTFILE" \
+		.1.3.6.1.4.1.171.10.76.30.2.3.7.0 i 2 >>$LOG
+	    RFOLDER="Automation/Backups/Dlink/"
+
+;;
+
 	# Ubiquiti
 	"Linux" )
 	    EXTFILE="cfg"
 	    LFILE_SSH=/tmp/system.$EXTFILE
 	    RFOLDER_SSH=/srv/tftp
 	    RFOLDER="Automation/Backups/UBNT/"
-	    SSHRequest $ip $LFILE_SSH $RFOLDER_SSH $EXTILE
+	    SSHRequest $ip $LFILE_SSH $RFOLDER_SSH $EXTFILE
 	;;
 
 
