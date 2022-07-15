@@ -146,7 +146,7 @@ do
     LFILENAME_HEX=$(xxd -pu <<< "$LFILENAME")
     LFILENAME_HEX=${LFILENAME_HEX::-2}
     MODEL=`snmpwalk -v1 -c public $ip 1.3.6.1.2.1.1.1.0| awk '{ print $4 }'  | sed  -e 's/\"//g'`
-    [ -z $MODEL  ] && MODEL=$ip
+    [ -z "$MODEL" ] && MODEL=$ip
     NOTFOUND=0
     echo "=$ip==============$MODEL================" >> $LOG
     case $MODEL in
@@ -320,6 +320,23 @@ do
 		"http://$ip/UploadFile.html" -H "Cookie: SID=$COOKIE; dw_nav=Maintenance"
 	    curl -i -# -o /dev/null -X POST -d "loginpage=hp_login.html" "http://$ip/links.html" \
 		    -H "Cookie: SID=$COOKIE"
+	;;
+	
+	"SNR-S2982G-24T-POE-E
+
+
+
+
+NAG" )
+	    EXTFILE="cfg"
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.40418.7.100.1.10.3.0 s $TFTP_SERV \
+		.1.3.6.1.4.1.40418.7.100.1.10.4.0 s startup.cfg \
+		.1.3.6.1.4.1.40418.7.100.1.10.5.0 s "$ip.$EXTFILE" \
+		.1.3.6.1.4.1.40418.7.100.1.10.7.0 i 2 \
+		.1.3.6.1.4.1.40418.7.100.1.10.8.0 i 1 >> $LOG
+	    RFOLDER="Automation/Backups/SNR/"
+
 	;;
 
     * )
