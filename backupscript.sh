@@ -21,9 +21,10 @@ TFTP_SERV_HEX=$(printf '%02X' ${TFTP_SERV//./ })
 LFILENAME="running-config"
 
 INC_IP="
-192.168.1.44
+10.10.0.2
 "
 EXC_IP="
+192.168.1.10
 192.168.1.252
 "
 REQ_IP=()
@@ -97,11 +98,11 @@ echo $ret
 function SSHRequest(){
     local ret=0
     if [ $# -eq 4 ]; then
-	if ! grep "$(ssh-keyscan $ip 2>/dev/null)" ~/.ssh/known_hosts > /dev/null; then
+	if ! grep "$(ssh-keyscan $1 2>/dev/null)" ~/.ssh/known_hosts > /dev/null; then
 	    echo "Unknow ssh host $1" >> $LOG 
 	    ssh-keyscan $1 >> ~/.ssh/known_hosts
 	fi
-	sshpass -p $PASSWD scp $USER@$1:$2 $3/$1.$4
+	sshpass -p $PASSWD scp -oHostKeyAlgorithms=+ssh-rsa $USER@$1:$2 $3/$1.$4
     ret=0
     else
 	echo "Wrong parameters in function SSHRequest" >> $LOG
@@ -146,7 +147,7 @@ do
     LFILENAME_HEX=$(xxd -pu <<< "$LFILENAME")
     LFILENAME_HEX=${LFILENAME_HEX::-2}
     MODEL=`snmpwalk -v1 -c public $ip 1.3.6.1.2.1.1.1.0| awk '{ print $4 }'  | sed  -e 's/\"//g'`
-    [ -z "$MODEL" ] && MODEL=$ip
+    [ -z "$MODEL"  ] && MODEL=$ip
     NOTFOUND=0
     echo "=$ip==============$MODEL================" >> $LOG
     case $MODEL in
@@ -197,7 +198,7 @@ do
 		.1.3.6.1.4.1.171.10.76.12.3.7.0 i 2  >> $LOG
 	    RFOLDER="Automation/Backups/Dlink/"
 
-          # DGS-1210-10P rev. R1
+# DGS-1210-10P rev. R1
 	    $SNMPSET $ip \
 		.1.3.6.1.4.1.171.11.166.1000.3.2.1.0 x $TFTP_SERV_HEX \
 		.1.3.6.1.4.1.171.11.166.1000.3.2.2.0 i 1 \
@@ -248,6 +249,21 @@ do
 
 ;;
 
+	"D-Link" )
+# 	"DGS-3130-30S"
+	    EXTFILE="cfg"
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.171.17.14.1.2.1.2.1 i 2 \
+		.1.3.6.1.4.1.171.17.14.1.2.1.3.1 s "running-config" \
+		.1.3.6.1.4.1.171.17.14.1.2.1.4.1 s "$ip.$EXTFILE" \
+		.1.3.6.1.4.1.171.17.14.1.2.1.5.1 i 1 \
+		.1.3.6.1.4.1.171.17.14.1.2.1.6.1 x $TFTP_SERV_HEX \
+		.1.3.6.1.4.1.171.17.14.1.2.1.12.1 i 4 >> $LOG
+	    RFOLDER="Automation/Backups/Dlink/"
+
+;;
+
+
 	"DGS-1210-28P/ME/B1" )
 	    EXTFILE="cfg"
 	    $SNMPSET $ip \
@@ -258,6 +274,7 @@ do
 
 ;;
 
+
 	# Ubiquiti
 	"Linux" )
 	    EXTFILE="cfg"
@@ -267,14 +284,13 @@ do
 	    SSHRequest $ip $LFILE_SSH $RFOLDER_SSH $EXTFILE
 	;;
 
-
 	# Ubiquiti EdgeSwitch fw > 2.1
 	"EdgeSwitch" )
 
 	    EXTFILE="tar.gz"
 	    LFILE_SSH=/tmp/backup.$EXTFILE
 	    SSHCOMMAND="/bin/backupcfg encode edgeswitchbackup -f > $LFILE_SSH"
-	    sshpass -p $PASSWD ssh $USER@$ip $SSHCOMMAND
+	    sshpass -p $PASSWD ssh -oHostKeyAlgorithms=+ssh-rsa $USER@$ip $SSHCOMMAND
 	    RFOLDER_SSH=/srv/tftp
 	    RFOLDER="Automation/Backups/UBNT/"
 	    EXTFILE="tar.gz"
@@ -308,7 +324,7 @@ do
 	    curl -X POST -d "pswType=1"  "http://$ip/cgi/backup.cgi" -H "Cookie: Gambit=${COOKIE[1]}; SessID=${COOKIE[0]}" -o $TFTPROOT/$ip.$EXTFILE
 	;;
 	
-	# HP ProCurve 1810G - 24 GE
+# HP ProCurve 1810G - 24 GE
 	"192.168.1.6" )
 	    EXTFILE="cfg"
 	    RFOLDER="Automation/Backups/Dlink/"
@@ -321,7 +337,7 @@ do
 	    curl -i -# -o /dev/null -X POST -d "loginpage=hp_login.html" "http://$ip/links.html" \
 		    -H "Cookie: SID=$COOKIE"
 	;;
-	
+
 	"SNR-S2982G-24T-POE-E
 
 
@@ -338,6 +354,7 @@ NAG" )
 	    RFOLDER="Automation/Backups/SNR/"
 
 	;;
+
 
     * )
 	echo "$ip $MODEL Device not found">> $LOG
