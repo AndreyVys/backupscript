@@ -1,8 +1,11 @@
 #!/bin/bash
 
-USER_FTP=admin
-PASSWD_FTP=admin
-HOST_FTP=ftp.local
+# set -x
+# set -v
+
+USER_FTP=user
+PASSWD_FTP=user
+HOST_FTP=192.168.1.1
 PORT_FTP=21
 RFOLDER="Automation/Backups/Dlink/"
 LOG="/tmp/`basename $BASH_SOURCE | cut -f 1 -d '.'`.log"
@@ -16,20 +19,31 @@ TFTPROOT=/srv/tftp
 # for SNMP v2c
 SNMPSET="snmpset -v2c -c private "
 DATE=`date +%d%m%Y`
-TFTP_SERV=192.168.1.11
+TFTP_SERV=192.168.51.11
 TFTP_SERV_HEX=$(printf '%02X' ${TFTP_SERV//./ })
 LFILENAME="running-config"
 
 INC_IP="
-10.10.0.2
+10.210.100.1
+10.210.100.2
+10.210.100.3
+10.210.100.4
+10.210.100.5
+10.210.100.6
+10.210.100.7
+10.210.100.8
+10.210.100.9
+10.210.100.10
+10.210.100.11
+10.210.100.12
 "
 EXC_IP="
-192.168.1.10
-192.168.1.252
+192.168.53.10
+192.168.53.252
 "
 REQ_IP=()
-FIRST_IP=192.168.1.1
-NUM_IP=150
+FIRST_IP=192.168.53.1
+NUM_IP=100
 
 rm -f $LOG
 rm -f /temp/temp.txt
@@ -102,7 +116,7 @@ function SSHRequest(){
 	    echo "Unknow ssh host $1" >> $LOG 
 	    ssh-keyscan $1 >> ~/.ssh/known_hosts
 	fi
-	sshpass -p $PASSWD scp -oHostKeyAlgorithms=+ssh-rsa $USER@$1:$2 $3/$1.$4
+	sshpass -p $PASSWD scp -O -oHostKeyAlgorithms=+ssh-rsa $USER@$1:$2 $3/$1.$4
     ret=0
     else
 	echo "Wrong parameters in function SSHRequest" >> $LOG
@@ -152,7 +166,8 @@ do
     echo "=$ip==============$MODEL================" >> $LOG
     case $MODEL in
 
-	"DGS-1510-52X" | "DGS-1510-20" ) 
+	"DGS-1510-52X" | "DGS-1510-20" )
+	    EXTFILE="cfg" 
 	    $SNMPSET $ip \
 		.1.3.6.1.4.1.171.14.14.1.2.1.2.1 i 2 \
 		.1.3.6.1.4.1.171.14.14.1.2.1.3.1 x $LFILENAME_HEX \
@@ -198,7 +213,6 @@ do
 		.1.3.6.1.4.1.171.10.76.12.3.7.0 i 2  >> $LOG
 	    RFOLDER="Automation/Backups/Dlink/"
 
-# DGS-1210-10P rev. R1
 	    $SNMPSET $ip \
 		.1.3.6.1.4.1.171.11.166.1000.3.2.1.0 x $TFTP_SERV_HEX \
 		.1.3.6.1.4.1.171.11.166.1000.3.2.2.0 i 1 \
@@ -226,6 +240,18 @@ do
 		.1.3.6.1.4.1.171.10.76.18.1.3.10.5.0 i 2  >>$LOG
 	    RFOLDER="Automation/Backups/Dlink/"
 	;;
+
+
+	"DGS-1210-28P" )
+	    EXTFILE="cfg"
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.1.0 x $TFTP_SERV_HEX \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.4.0 s "$ip.$EXTFILE" \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.7.0 i 3 \
+		.1.3.6.1.4.1.171.11.166.1000.3.2.5.0 i 2  >>$LOG
+	    RFOLDER="Automation/Backups/Dlink/"
+	;;
+
 
 	"DGS-1210-28" )
 	    EXTFILE="cfg"
@@ -274,6 +300,16 @@ do
 
 ;;
 
+	"DGS-1210-10P/ME/A1" )
+	    EXTFILE="cfg"
+	    $SNMPSET $ip \
+		.1.3.6.1.4.1.171.10.76.42.1.3.5.0 a $TFTP_SERV \
+		.1.3.6.1.4.1.171.10.76.42.1.3.6.0 s "$ip.$EXTFILE" \
+		.1.3.6.1.4.1.171.10.76.42.1.3.7.0 i 2 >>$LOG
+	    RFOLDER="Automation/Backups/Dlink/"
+
+;;
+
 
 	# Ubiquiti
 	"Linux" )
@@ -316,16 +352,15 @@ do
 	    cat $OUT | sed 's/\r$//; 1,/name = startup-config:/d; /(config)>/,$d' > $TFTPROOT/$ip.$EXTFILE
 	;;
 
-	"DGS-1100-08P"|"192.168.1.13" )
+	"DGS-1100-08P"|"192.168.53.13" )
 
 	    EXTFILE="cfg"
 	    RFOLDER="Automation/Backups/Dlink/"
 	    COOKIE=(`curl -i -# -X POST -d pass=$PASSWD_MD5 http://$ip/cgi/login.cgi | sed 's|.*SessID=||; s|.*Gambit=||'|sed -r 's/;path.+//'|sed -n "2,3p"`)
 	    curl -X POST -d "pswType=1"  "http://$ip/cgi/backup.cgi" -H "Cookie: Gambit=${COOKIE[1]}; SessID=${COOKIE[0]}" -o $TFTPROOT/$ip.$EXTFILE
 	;;
-	
-# HP ProCurve 1810G - 24 GE
-	"192.168.1.6" )
+# HPE
+	"192.168.53.6" )
 	    EXTFILE="cfg"
 	    RFOLDER="Automation/Backups/Dlink/"
 	    COOKIE=`curl -i -# --cookie-jar - -o /dev/null -X POST -d \
@@ -366,7 +401,7 @@ NAG" )
 	sleep 5
 	if [ $(SendtoFTP $ip $RFOLDER $EXTFILE) -ne 0 ]; then
 	    echo "File from $ip not ready. Try to waiting file..." >>$LOG
-	    sleep 10
+	    sleep 30
 	    SendtoFTP $ip $RFOLDER $EXTFILE
 	fi
     fi
